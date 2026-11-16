@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lock & Key — Unit 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Nunito', 'Comic Sans MS', cursive, sans-serif;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    min-height: 100vh; padding: 20px; color: #fff;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+
+  /* HEADER */
+  .header { text-align: center; margin-bottom: 22px; }
+  .header h1 {
+    font-family: 'Fredoka One', cursive; font-size: 3rem;
+    background: linear-gradient(135deg,#f7971e,#ffd200);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header .subtitle {
+    font-size: 1.15rem; color: rgba(255,255,255,0.7);
+    background: rgba(255,255,255,0.08); padding: 6px 26px;
+    border-radius: 40px; display: inline-block;
+    border: 1px solid rgba(255,255,255,0.1);
+    font-weight: 700; margin-top: 6px;
+  }
+
+  /* TABS */
+  .tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 22px; flex-wrap: wrap; }
+  .tab-btn {
+    border: none; padding: 12px 22px; border-radius: 60px;
+    font-size: 0.95rem; font-weight: 800; font-family: 'Nunito', sans-serif;
+    cursor: pointer; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.55);
+    border: 1px solid rgba(255,255,255,0.08); transition: all 0.3s ease;
+  }
+  .tab-btn.active {
+    background: linear-gradient(135deg,#f7971e,#ffd200); color: #1a1a2e;
+    border-color: transparent; box-shadow: 0 8px 30px rgba(247,151,30,0.35);
+  }
+
+  .tab-content { display: none; animation: fadeSlide 0.4s ease; }
+  .tab-content.active { display: block; }
+  @keyframes fadeSlide { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+
+  .panel {
+    background: rgba(255,255,255,0.05); border-radius: 32px;
+    border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(10px);
+    padding: 26px; box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+  }
+
+  /* WARM-UP */
+  .warmup-stage {
+    position: relative; width: 100%; max-width: 900px; margin: 0 auto 20px;
+    aspect-ratio: 4/3; border-radius: 24px; overflow: hidden; background: #000;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 4px rgba(255,210,0,0.5);
+    cursor: none;
+  }
+  .warmup-stage img.main-img {
+    width: 100%; height: 100%; object-fit: contain; pointer-events: none;
+  }
+  .flashlight-mask {
+    position: absolute; inset: 0; pointer-events: none; z-index: 5; background: #000;
+    -webkit-mask-image: radial-gradient(circle 300px at var(--x, 50%) var(--y, 50%), transparent 30%, black 70%);
+    mask-image: radial-gradient(circle 300px at var(--x, 50%) var(--y, 50%), transparent 30%, black 70%);
+  }
+  .warmup-stage.light-on .flashlight-mask { opacity: 0; }
+  .cursor-flashlight {
+    position: absolute; width: 140px; height: auto;
+    transform-origin: bottom right; transform: translate(-100%, -100%) rotate(-45deg);
+    pointer-events: none; z-index: 10; opacity: 1;
+  }
+  .warmup-stage.light-on .cursor-flashlight { display: none; }
+
+  .warmup-controls {
+    max-width: 900px; margin: 0 auto;
+    background: rgba(15, 12, 41, 0.85); border: 2px solid #ffd200;
+    border-radius: 20px; padding: 20px 30px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 20px; flex-wrap: wrap;
+  }
+  .wq-text {
+    font-family: 'Fredoka One', cursive; font-size: 1.4rem; color: #fff;
+    flex: 1; min-width: 250px; transition: opacity 0.3s;
+  }
+  .warmup-btn {
+    background: linear-gradient(135deg,#f7971e,#ffd200);
+    color: #1a1a2e; border: none; padding: 14px 30px; border-radius: 50px;
+    font-family: 'Fredoka One'; font-size: 1.1rem; cursor: pointer;
+    box-shadow: 0 6px 0 #b55a00;
+  }
+  .warmup-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #b55a00; }
+
+  /* VIDEO */
+  .video-wrap {
+    max-width: 900px; margin: 0 auto; border-radius: 24px; overflow: hidden; background: #000;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 4px rgba(255,210,0,0.5);
+  }
+  .video-wrap video { width: 100%; display: block; }
+
+  /* COMIC */
+  .comic-wrapper {
+    position: relative; max-width: 900px; margin: 0 auto;
+    border-radius: 24px; overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 4px rgba(255,210,0,0.5);
+    cursor: none; background: #fff;
+  }
+  .comic-wrapper img { width: 100%; display: block; }
+  .magnifier-lens {
+    position: absolute; width: 200px; height: 200px; border-radius: 50%;
+    border: 5px solid #ffd200; box-shadow: 0 0 0 3px #1a1a2e, 0 15px 40px rgba(0,0,0,0.6);
+    background-repeat: no-repeat; pointer-events: none;
+    opacity: 0; transition: opacity 0.2s; z-index: 10; transform: translate(-50%, -50%);
+  }
+  .magnifier-lens.active { opacity: 1; }
+  .magnifier-lens::after {
+    content: ''; position: absolute; bottom: -30px; right: -15px; width: 50px; height: 50px;
+    background: #8b5a2b; border-radius: 40% 40% 50% 50%; transform: rotate(-45deg);
+  }
+
+  /* МОДАЛЬНОЕ ОКНО ПАНЕЛЕЙ */
+  .modal {
+    position: fixed; inset: 0; background: rgba(15,12,41,0.95);
+    backdrop-filter: blur(10px); z-index: 9999;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; visibility: hidden; transition: all 0.3s ease;
+  }
+  .modal.show { opacity: 1; visibility: visible; }
+  .modal-inner {
+    background: #fff; border-radius: 24px; padding: 22px;
+    max-width: 96vw; max-height: 95vh; display: flex; flex-direction: column; gap: 16px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 0 4px rgba(255,210,0,0.6);
+  }
+  .modal-img-wrap img { max-width: 100%; max-height: 75vh; display: block; margin: 0 auto; }
+  .modal-controls { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+  .modal-nav-btn {
+    border: none; width: 50px; height: 50px; border-radius: 50%;
+    background: linear-gradient(135deg, #f7971e, #ffd200);
+    color: #1a1a2e; font-size: 1.4rem; font-weight: 800; cursor: pointer;
+  }
+  .modal-close-btn {
+    border: none; width: 50px; height: 50px; border-radius: 50%;
+    background: #1a1a2e; color: #ffd200; font-size: 1.3rem; cursor: pointer;
+  }
+
+  /* EXERCISES TABS */
+  .sub-tabs {
+    display: flex; gap: 10px; justify-content: center; margin-bottom: 25px; flex-wrap: wrap;
+  }
+  .sub-tab-btn {
+    border: 2px solid rgba(255,210,0,0.4); background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.6); padding: 10px 22px; border-radius: 40px;
+    font-family: 'Nunito'; font-weight: 800; font-size: 1rem;
+    cursor: pointer; transition: all 0.25s;
+  }
+  .sub-tab-btn.active {
+    background: linear-gradient(135deg,#f7971e,#ffd200); color: #1a1a2e;
+    border-color: transparent; box-shadow: 0 8px 24px rgba(247,151,30,0.5);
+  }
+  .exercise-content { display: none; }
+  .exercise-content.active { display: block; animation: fadeSlide 0.3s ease; }
+
+  /* TRUE / FALSE CARDS */
+  .tf-stage {
+    min-height: 350px; display: flex; align-items: center; justify-content: center;
+  }
+  .tf-card {
+    background: rgba(15, 12, 41, 0.8); border: 3px solid #ffd200;
+    border-radius: 28px; padding: 40px; text-align: center; width: 100%; max-width: 700px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  }
+  .tf-text {
+    font-family: 'Fredoka One'; font-size: 1.8rem; margin-bottom: 30px; line-height: 1.4;
+  }
+  .tf-buttons { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+  .tf-btn {
+    width: 120px; height: 120px; border-radius: 50%; border: 4px solid transparent;
+    font-family: 'Fredoka One'; font-size: 1.5rem; cursor: pointer; transition: all 0.3s;
+  }
+  .tf-btn.true {
+    background: linear-gradient(135deg, #22c55e, #4ade80); color: #fff;
+    box-shadow: 0 0 20px rgba(74,222,128,0.6), 0 10px 0 #166534;
+  }
+  .tf-btn.false {
+    background: linear-gradient(135deg, #ec4899, #f472b6); color: #fff;
+    box-shadow: 0 0 20px rgba(244,114,182,0.6), 0 10px 0 #831843;
+  }
+  .tf-btn:active:not(:disabled) { transform: translateY(5px); box-shadow: none; }
+  .tf-btn:disabled { opacity: 0.5; cursor: default; }
+  .tf-btn.correct { background: #22c55e !important; box-shadow: 0 0 30px #22c55e; }
+  .tf-btn.wrong { background: #ef4444 !important; box-shadow: 0 0 30px #ef4444; }
+
+  .tf-nav {
+    display: flex; gap: 15px; justify-content: center; align-items: center; margin-top: 25px;
+  }
+  .tf-nav-btn {
+    background: #ffd200; color: #1a1a2e; border: none; width: 50px; height: 50px;
+    border-radius: 50%; font-size: 1.4rem; font-weight: 800; cursor: pointer;
+  }
+  .tf-nav-btn:disabled { opacity: 0.3; }
+  .tf-counter { font-family: 'Fredoka One'; font-size: 1.2rem; color: #ffd200; }
+
+  /* FILL IN THE GAPS */
+  .gap-sentence {
+    background: rgba(255,255,255,0.05); padding: 15px 20px; border-radius: 16px;
+    margin-bottom: 15px; font-size: 1.2rem; font-weight: 600;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  }
+  .gap-input {
+    padding: 8px 15px; border-radius: 10px; border: 2px dashed #ffd200;
+    background: rgba(15,12,41,0.5); color: #ffd200; font-size: 1.1rem;
+    font-family: 'Nunito'; font-weight: 800; outline: none;
+    width: 150px; text-align: center;
+  }
+  .gap-input.correct { border-color: #4ade80; background: rgba(74,222,128,0.1); color: #4ade80; border-style: solid; }
+  .gap-input.wrong { border-color: #f87171; background: rgba(248,113,113,0.1); color: #f87171; border-style: solid; }
+
+  /* WORD BANK */
+  .word-bank {
+    display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
+    background: rgba(15, 12, 41, 0.6); padding: 15px 20px; border-radius: 20px;
+    border: 2px solid #60a5fa; margin-bottom: 25px;
+  }
+  .wb-item {
+    background: rgba(255, 255, 255, 0.1); padding: 8px 16px; border-radius: 30px;
+    color: #fff; font-weight: 800; font-size: 1rem; border: 1px solid rgba(255,255,255,0.2);
+    user-select: none;
+  }
+
+  /* READING COMPREHENSION */
+  .rc-row {
+    display: flex; align-items: center; gap: 15px; margin-bottom: 15px;
+    flex-wrap: wrap;
+  }
+  .rc-num {
+    background: #ffd200; color: #1a1a2e; width: 30px; height: 30px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; flex-shrink: 0;
+  }
+  .rc-text { font-weight: 700; font-size: 1.1rem; flex: 1 1 200px; }
+  .rc-input {
+    flex: 1 1 250px; padding: 10px 15px; border-radius: 12px;
+    border: 2px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3);
+    color: #fff; font-size: 1rem; font-family: 'Nunito'; outline: none;
+  }
+  .rc-input:focus { border-color: #ffd200; }
+
+  /* Кнопка показать комикс */
+  .show-comic-btn {
+    background: #60a5fa; color: #fff; border: none;
+    padding: 15px 30px; border-radius: 50px; font-weight: 800;
+    font-size: 1.2rem; cursor: pointer; display: block; margin: 30px auto 0;
+    box-shadow: 0 8px 0 #3b82f6; transition: all 0.2s;
+  }
+  .show-comic-btn:active { transform: translateY(4px); box-shadow: 0 4px 0 #3b82f6; }
+
+  /* ПЛАВАЮЩЕЕ ОКНО С КОМИКСОМ */
+  .floating-comic {
+    position: fixed; top: 100px; left: 100px; width: 500px;
+    background: #fff; border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 0 3px #ffd200;
+    z-index: 9998; display: none; flex-direction: column;
+    resize: both; overflow: hidden; min-width: 300px; min-height: 200px;
+  }
+  .floating-comic.show { display: flex; }
+  .floating-header {
+    background: #1a1a2e; color: #ffd200; padding: 10px 15px;
+    cursor: grab; display: flex; justify-content: space-between;
+    align-items: center; font-weight: 800; user-select: none;
+  }
+  .floating-header:active { cursor: grabbing; }
+  .floating-close { cursor: pointer; color: #f87171; font-size: 1.2rem; }
+  .floating-body { padding: 5px; background: #fff; overflow: auto; flex: 1; }
+  .floating-body img { width: 100%; height: auto; display: block; pointer-events: none; }
+
+  @media (max-width: 700px) {
+    .header h1 { font-size: 2rem; }
+    .tf-btn { width: 90px; height: 90px; font-size: 1.2rem; }
+    .tf-text { font-size: 1.4rem; }
+    .floating-comic { width: 90vw; left: 5vw; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>🔍 Lock & Key</h1>
+    <span class="subtitle">Unit 2 — The Monster in the House</span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="tab-warmup">🔥 Warm-up</button>
+    <button class="tab-btn" data-tab="tab-video">🎬 Video</button>
+    <button class="tab-btn" data-tab="tab-comic">📖 Comic</button>
+    <button class="tab-btn" data-tab="tab-exercises">📝 Exercises</button>
+  </div>
+
+  <!-- 1. WARM-UP -->
+  <div class="tab-content active" id="tab-warmup">
+    <div class="panel">
+      <div class="warmup-stage" id="warmupStage">
+        <img src="comic.png" alt="Comic" class="main-img">
+        <div class="flashlight-mask" id="warmupMask"></div>
+        <img src="flashlight.png" alt="Light" class="cursor-flashlight" id="warmupCursor">
+      </div>
+      <div class="warmup-controls">
+        <div class="wq-text" id="wqText"><span>1.</span> Look at the picture. What rooms can you see?</div>
+        <button class="warmup-btn" id="warmupNextBtn" onclick="nextWQ()">Next ➡️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. VIDEO -->
+  <div class="tab-content" id="tab-video">
+    <div class="panel">
+      <div class="video-wrap">
+        <video controls>
+          <source src="story.mp4" type="video/mp4">
+        </video>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. COMIC -->
+  <div class="tab-content" id="tab-comic">
+    <div class="panel">
+      <div class="comic-wrapper" id="comicWrapper" onclick="openComicModal()">
+        <img src="comic.png" alt="Comic">
+        <div class="magnifier-lens" id="lens"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. EXERCISES -->
+  <div class="tab-content" id="tab-exercises">
+    <div class="panel">
+      
+      <!-- Подвкладки -->
+      <div class="sub-tabs">
+        <button class="sub-tab-btn active" onclick="switchExercise('ex-tf', this)">✅ True / False</button>
+        <button class="sub-tab-btn" onclick="switchExercise('ex-gap', this)">✏️ Fill in the gaps</button>
+        <button class="sub-tab-btn" onclick="switchExercise('ex-rc', this)">📖 Reading Comprehension</button>
+      </div>
+
+      <!-- Подвкладка 1: True / False -->
+      <div class="exercise-content active" id="ex-tf">
+        <div class="tf-stage" id="tfStage"></div>
+        <div class="tf-nav">
+          <button class="tf-nav-btn" onclick="prevTF()">←</button>
+          <span class="tf-counter" id="tfCounter">1 / 6</span>
+          <button class="tf-nav-btn" onclick="nextTF()">→</button>
+        </div>
+      </div>
+
+      <!-- Подвкладка 2: Fill in the gaps -->
+      <div class="exercise-content" id="ex-gap">
+        
+        <!-- WORD BANK -->
+        <div class="word-bank">
+          <span class="wb-item">take</span>
+          <span class="wb-item">beard</span>
+          <span class="wb-item">downstairs</span>
+          <span class="wb-item">Clarence</span>
+          <span class="wb-item">happy</span>
+          <span class="wb-item">basement</span>
+          <span class="wb-item">climb</span>
+          <span class="wb-item">old</span>
+        </div>
+
+        <div class="gap-sentence">
+          1. Mrs Potts's house is very 
+          <input type="text" class="gap-input" id="gap1">.
+        </div>
+        <div class="gap-sentence">
+          2. The monster lives in the 
+          <input type="text" class="gap-input" id="gap2"> under the stairs.
+        </div>
+        <div class="gap-sentence">
+          3. Lock and Key need to 
+          <input type="text" class="gap-input" id="gap3"> the lamp.
+        </div>
+        <div class="gap-sentence">
+          4. They go 
+          <input type="text" class="gap-input" id="gap4"> to look for the monster.
+        </div>
+        <div class="gap-sentence">
+          5. They 
+          <input type="text" class="gap-input" id="gap5"> the stairs.
+        </div>
+        <div class="gap-sentence">
+          6. The monster is a cat called 
+          <input type="text" class="gap-input" id="gap6">.
+        </div>
+        <div class="gap-sentence">
+          7. The cat hasn't got a 
+          <input type="text" class="gap-input" id="gap7"> and a moustache.
+        </div>
+        <div class="gap-sentence">
+          8. Lock is not 
+          <input type="text" class="gap-input" id="gap8"> about going downstairs.
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+          <button class="tf-nav-btn" onclick="checkGaps()" style="width: auto; padding: 12px 30px; border-radius: 30px; background: #60a5fa; color: white; font-weight: 800;">✅ Check Answers</button>
+        </div>
+      </div>
+
+      <!-- Подвкладка 3: Reading Comprehension -->
+      <div class="exercise-content" id="ex-rc">
+        <div class="rc-row">
+          <span class="rc-num">1</span>
+          <span class="rc-text">Who lives in the house?</span>
+          <input type="text" class="rc-input">
+        </div>
+        <div class="rc-row">
+          <span class="rc-num">2</span>
+          <span class="rc-text">What does Mrs Potts think is in the basement?</span>
+          <input type="text" class="rc-input">
+        </div>
+        <div class="rc-row">
+          <span class="rc-num">3</span>
+          <span class="rc-text">What does the monster look like? (Describe it)</span>
+          <input type="text" class="rc-input">
+        </div>
+        <div class="rc-row">
+          <span class="rc-num">4</span>
+          <span class="rc-text">Where does the monster live?</span>
+          <input type="text" class="rc-input">
+        </div>
+        <div class="rc-row">
+          <span class="rc-num">5</span>
+          <span class="rc-text">What do Lock and Key take to the basement?</span>
+          <input type="text" class="rc-input">
+        </div>
+        <div class="rc-row">
+          <span class="rc-num">6</span>
+          <span class="rc-text">Who is Clarence?</span>
+          <input type="text" class="rc-input">
+        </div>
+        <div class="rc-row">
+          <span class="rc-num">7</span>
+          <span class="rc-text">Is Lock happy about going downstairs?</span>
+          <input type="text" class="rc-input">
+        </div>
+        <div class="rc-row">
+          <span class="rc-num">8</span>
+          <span class="rc-text">What is the monster doing when they find it?</span>
+          <input type="text" class="rc-input">
+        </div>
+
+        <button class="show-comic-btn" onclick="toggleFloatingComic()">🔍 Show the comic</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Плавающее окно комикса -->
+<div class="floating-comic" id="floatingComic">
+  <div class="floating-header" id="dragHandle">
+    <span>📖 Comic</span>
+    <span class="floating-close" onclick="toggleFloatingComic()">✕</span>
+  </div>
+  <div class="floating-body">
+    <img src="comic.png" alt="Comic">
+  </div>
+</div>
+
+<!-- Модальное окно панелей -->
+<div class="modal" id="comicModal" onclick="closeModal(event)">
+  <div class="modal-inner">
+    <div class="modal-img-wrap"><img id="modalImg" src="1.png"></div>
+    <div class="modal-controls">
+      <button class="modal-nav-btn" onclick="changePanel(-1)">←</button>
+      <span id="modalCounter" style="color:#1a1a2e; font-weight:800;">1 / 6</span>
+      <button class="modal-nav-btn" onclick="changePanel(1)">→</button>
+      <button class="modal-close-btn" onclick="closeModal(event)">✕</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // --- ЗВУКИ ---
+  const soundCtx = new (window.AudioContext || window.webkitAudioContext)();
+  document.addEventListener('click', () => {
+    if (soundCtx.state === 'suspended') soundCtx.resume();
+  }, { once: true });
+
+  function playSound(type) {
+    try {
+      const now = soundCtx.currentTime;
+      if (type === 'click') {
+        const osc = soundCtx.createOscillator();
+        const gain = soundCtx.createGain();
+        osc.connect(gain); gain.connect(soundCtx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(800, now);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        osc.start(now); osc.stop(now + 0.1);
+      } else if (type === 'correct') {
+        [523, 659, 784].forEach((freq, i) => {
+          const osc = soundCtx.createOscillator();
+          const gain = soundCtx.createGain();
+          osc.connect(gain); gain.connect(soundCtx.destination);
+          osc.type = 'sine'; osc.frequency.value = freq;
+          gain.gain.value = 0.1;
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2 + i * 0.1);
+          osc.start(now + i * 0.1); osc.stop(now + 0.2 + i * 0.1);
+        });
+      } else if (type === 'wrong') {
+        const osc = soundCtx.createOscillator();
+        const gain = soundCtx.createGain();
+        osc.connect(gain); gain.connect(soundCtx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(150, now + 0.3);
+        gain.gain.value = 0.1;
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now); osc.stop(now + 0.3);
+      }
+    } catch(e) {}
+  }
+
+  // --- ВКЛАДКИ ---
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playSound('click');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // --- ПОДВКЛАДКИ ---
+  function switchExercise(id, btn) {
+    playSound('click');
+    document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.exercise-content').forEach(c => c.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // --- WARM-UP ---
+  const wqs = [
+    "Look at the picture. What rooms can you see?",
+    "What does the monster look like?",
+    "Is there a monster in the basement, or is it a cat?"
+  ];
+  let wqIndex = 0;
+  const wqText = document.getElementById('wqText');
+  const wqBtn = document.getElementById('warmupNextBtn');
+  const warmupStage = document.getElementById('warmupStage');
+
+  function nextWQ() {
+    playSound('click');
+    if (wqIndex < wqs.length - 1) {
+      wqIndex++;
+      wqText.style.opacity = 0;
+      setTimeout(() => {
+        wqText.innerHTML = `<span>${wqIndex + 1}.</span> ${wqs[wqIndex]}`;
+        wqText.style.opacity = 1;
+      }, 300);
+    } else {
+      warmupStage.classList.add('light-on');
+      wqBtn.textContent = '✅ Done';
+      wqBtn.onclick = () => alert('Great job! Now go to the Video tab.');
+      wqText.innerHTML = "Well done!";
+    }
+  }
+
+  function moveLight(clientX, clientY) {
+    if (warmupStage.classList.contains('light-on')) return;
+    const rect = warmupStage.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    document.getElementById('warmupMask').style.setProperty('--x', `${x}px`);
+    document.getElementById('warmupMask').style.setProperty('--y', `${y}px`);
+    document.getElementById('warmupCursor').style.left = `${x}px`;
+    document.getElementById('warmupCursor').style.top = `${y}px`;
+  }
+  warmupStage.addEventListener('mousemove', (e) => moveLight(e.clientX, e.clientY));
+  warmupStage.addEventListener('touchmove', (e) => {
+    e.preventDefault(); moveLight(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: false });
+
+  // --- COMIC (Лупа) ---
+  const comicWrap = document.getElementById('comicWrapper');
+  const lens = document.getElementById('lens');
+  const comicImg = comicWrap.querySelector('img');
+  let lensClicked = false;
+
+  comicWrap.addEventListener('mousemove', (e) => {
+    const rect = comicWrap.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    lens.classList.add('active');
+    lens.style.left = x + 'px';
+    lens.style.top = y + 'px';
+    
+    const zoom = 2;
+    const bgX = -(x * zoom - lens.offsetWidth / 2);
+    const bgY = -(y * zoom - lens.offsetHeight / 2);
+    lens.style.backgroundImage = `url('${comicImg.src}')`;
+    lens.style.backgroundSize = `${rect.width * zoom}px ${rect.height * zoom}px`;
+    lens.style.backgroundPosition = `${bgX}px ${bgY}px`;
+  });
+  comicWrap.addEventListener('mouseleave', () => lens.classList.remove('active'));
+
+  let panel = 1;
+  const modal = document.getElementById('comicModal');
+  const modalImg = document.getElementById('modalImg');
+  const modalCounter = document.getElementById('modalCounter');
+
+  function openComicModal() {
+    playSound('click');
+    panel = 1; updatePanel(); modal.classList.add('show');
+  }
+  function closeModal(e) {
+    if (e && e.target !== modal && !e.target.classList.contains('modal-close-btn')) return;
+    playSound('click');
+    modal.classList.remove('show');
+  }
+  function changePanel(dir) {
+    playSound('click');
+    panel += dir;
+    if (panel < 1) panel = 1;
+    if (panel > 6) panel = 6;
+    updatePanel();
+  }
+  function updatePanel() {
+    modalImg.src = `${panel}.png`;
+    modalCounter.textContent = `${panel} / 6`;
+  }
+
+  // --- TRUE / FALSE ---
+  const tfData = [
+    { text: "The house is very old.", answer: true },
+    { text: "The monster lives in the bedroom.", answer: false },
+    { text: "The monster lives under the stairs in the basement.", answer: true },
+    { text: "Lock and Key go downstairs to look for the monster.", answer: true },
+    { text: "The monster is a big dog.", answer: false },
+    { text: "The cat's name is Clarence.", answer: true }
+  ];
+  let tfIndex = 0;
+  const tfStage = document.getElementById('tfStage');
+  const tfCounter = document.getElementById('tfCounter');
+
+  function renderTF() {
+    if (tfIndex >= tfData.length) {
+      tfStage.innerHTML = `
+        <div class="tf-card">
+          <div class="tf-text">🎉 Well done!</div>
+          <button class="tf-btn true" onclick="resetTF()" style="width:auto; padding: 15px 30px; border-radius: 50px; font-size: 1.1rem;">Start over</button>
+        </div>
+      `;
+      tfCounter.textContent = `${tfData.length} / ${tfData.length}`;
+      return;
+    }
+
+    const item = tfData[tfIndex];
+    tfStage.innerHTML = `
+      <div class="tf-card">
+        <div class="tf-text">${item.text}</div>
+        <div class="tf-buttons">
+          <button class="tf-btn true" onclick="checkTF(true, this)">TRUE</button>
+          <button class="tf-btn false" onclick="checkTF(false, this)">FALSE</button>
+        </div>
+      </div>
+    `;
+    tfCounter.textContent = `${tfIndex + 1} / ${tfData.length}`;
+  }
+
+  function checkTF(ans, btn) {
+    const correct = tfData[tfIndex].answer;
+    const btns = btn.parentElement.querySelectorAll('.tf-btn');
+    btns.forEach(b => b.disabled = true);
+
+    if (ans === correct) {
+      btn.classList.add('correct');
+      playSound('correct');
+      setTimeout(() => { tfIndex++; renderTF(); }, 1000);
+    } else {
+      btn.classList.add('wrong');
+      playSound('wrong');
+      btns.forEach(b => {
+        if (b.textContent === 'TRUE' && correct === true) b.classList.add('correct');
+        if (b.textContent === 'FALSE' && correct === false) b.classList.add('correct');
+      });
+      setTimeout(() => { tfIndex++; renderTF(); }, 1500);
+    }
+  }
+
+  function nextTF() { playSound('click'); if (tfIndex < tfData.length) { tfIndex++; renderTF(); } }
+  function prevTF() { playSound('click'); if (tfIndex > 0) { tfIndex--; renderTF(); } }
+  function resetTF() { playSound('click'); tfIndex = 0; renderTF(); }
+
+  // --- FILL IN THE GAPS ---
+  function checkGaps() {
+    const answers = {
+      gap1: "old",
+      gap2: "basement",
+      gap3: "take",
+      gap4: "downstairs",
+      gap5: "climb",
+      gap6: "Clarence",
+      gap7: "beard",
+      gap8: "happy"
+    };
+    let allCorrect = true;
+    for (let id in answers) {
+      const input = document.getElementById(id);
+      const val = input.value.trim().toLowerCase();
+      if (val === answers[id].toLowerCase()) {
+        input.classList.add('correct');
+        input.classList.remove('wrong');
+      } else {
+        input.classList.add('wrong');
+        input.classList.remove('correct');
+        allCorrect = false;
+      }
+    }
+    if (allCorrect) playSound('correct');
+    else playSound('wrong');
+  }
+
+  // --- ПЛАВАЮЩЕЕ ОКНО ---
+  const floatComic = document.getElementById('floatingComic');
+  const dragHandle = document.getElementById('dragHandle');
+  let isDragging = false, offsetX = 0, offsetY = 0;
+
+  function toggleFloatingComic() {
+    playSound('click');
+    floatComic.classList.toggle('show');
+  }
+
+  dragHandle.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    offsetX = e.clientX - floatComic.getBoundingClientRect().left;
+    offsetY = e.clientY - floatComic.getBoundingClientRect().top;
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    floatComic.style.left = (e.clientX - offsetX) + 'px';
+    floatComic.style.top = (e.clientY - offsetY) + 'px';
+  });
+
+  window.addEventListener('mouseup', () => isDragging = false);
+
+  // Инициализация
+  renderTF();
+</script>
+</body>
+</html>
